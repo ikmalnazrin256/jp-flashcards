@@ -1,8 +1,10 @@
-import React from 'react';
-import { Flame, Book, Upload, Scissors, Trash2, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Flame, Book, Upload, Scissors, Trash2, Check, Search, X } from 'lucide-react';
 import { DAILY_GOAL_TARGET } from '../constants';
 
 export const LibraryView = ({ decks, progressMap, userStats, onSelectDeck, onDeleteDeck, onSplitDeck, fileInputRef }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredDecks = decks.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const hasDecks = decks.length > 0;
   
   // Calculate Streak & Goal Progress
@@ -16,6 +18,28 @@ export const LibraryView = ({ decks, progressMap, userStats, onSelectDeck, onDel
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Select a deck to start learning</p>
         </div>
       </div>
+
+      {/* Search Bar */}
+      {hasDecks && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search decks..."
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm font-medium border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
       
       {/* DAILY GOAL WIDGET */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg mb-6 flex items-center justify-between">
@@ -46,7 +70,12 @@ export const LibraryView = ({ decks, progressMap, userStats, onSelectDeck, onDel
       
       {hasDecks ? (
         <div className="grid gap-4">
-          {decks.map(deck => {
+          {filteredDecks.length === 0 && (
+            <div className="text-center py-10 text-gray-400 dark:text-gray-500 text-sm font-medium">
+              No decks match &ldquo;{searchTerm}&rdquo;
+            </div>
+          )}
+          {filteredDecks.map(deck => {
             const deckProgress = progressMap[deck.id] || {};
             const total = deck.cards.length;
             const mastered = Object.values(deckProgress).filter(s => s.interval > 20).length;
