@@ -191,6 +191,8 @@ export const normalizeDeckSettings = (rawSettings) => {
     const safeSettings = settings && typeof settings === 'object' ? settings : {};
     acc[deckId] = {
       dailyNew: Number.isFinite(safeSettings.dailyNew) ? Math.max(0, Math.min(100, safeSettings.dailyNew)) : 10,
+      weeklyNew: Number.isFinite(safeSettings.weeklyNew) ? Math.max(0, Math.min(500, safeSettings.weeklyNew)) : 70,
+      reviewPeriod: safeSettings.reviewPeriod === 'weekly' ? 'weekly' : 'daily',
       hideRomaji: Boolean(safeSettings.hideRomaji),
       autoPlay: Boolean(safeSettings.autoPlay),
     };

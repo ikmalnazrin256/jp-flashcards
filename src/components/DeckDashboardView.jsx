@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, PenTool, Flame, Book, Play, Layers, List, Settings, Filter, RotateCcw, Zap, Download } from 'lucide-react';
 
-export const DeckDashboardView = ({ deck, stats, onStart, onViewCards, onViewSettings, onExport, onEditDeck, onAddCard, activeSession, onResumeSession, onDiscardSession }) => {
+export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onViewCards, onViewSettings, onExport, onEditDeck, onAddCard, activeSession, onResumeSession, onDiscardSession }) => {
   const [filters, setFilters] = useState({ new: true, again: true, hard: true, good: true, easy: true, ignoreDueDate: false });
   const [startFrom, setStartFrom] = useState('');
   const [reverseMode, setReverseMode] = useState(false); // NEW: Reverse Mode Toggle
@@ -92,6 +92,11 @@ export const DeckDashboardView = ({ deck, stats, onStart, onViewCards, onViewSet
               <span className="font-bold text-xs uppercase">New</span>
             </div>
             <p className="text-3xl font-black text-gray-800 dark:text-white">{stats.new}</p>
+            {activeSettings && (
+              <p className="text-[10px] text-blue-400 dark:text-blue-500 mt-1 font-semibold">
+                Limit: {activeSettings.reviewPeriod === 'weekly' ? `${activeSettings.weeklyNew ?? 70}/wk` : `${activeSettings.dailyNew ?? 10}/day`}
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -50,7 +50,7 @@ const App = () => {
 
   const activeDeck = useMemo(() => decks.find(d => d.id === activeDeckId), [decks, activeDeckId]);
   const activeProgress = useMemo(() => activeDeckId ? (progressMap[activeDeckId] || {}) : {}, [progressMap, activeDeckId]);
-  const activeSettings = useMemo(() => activeDeckId ? (deckSettings[activeDeckId] || { dailyNew: 10, hideRomaji: false, autoPlay: false }) : {}, [deckSettings, activeDeckId]);
+  const activeSettings = useMemo(() => activeDeckId ? (deckSettings[activeDeckId] || { dailyNew: 10, weeklyNew: 70, reviewPeriod: 'daily', hideRomaji: false, autoPlay: false }) : {}, [deckSettings, activeDeckId]);
 
   const availableListTags = useMemo(() => {
      if(!activeDeck) return [];
@@ -324,10 +324,27 @@ const App = () => {
            const foundIndex = deckCards.findIndex(c => parseInt(c.originalNumber) === target);
            if (foundIndex !== -1) startIndex = foundIndex; else startIndex = Math.max(0, target - 1);
        }
+
+       // Compute how many new cards have already been introduced this period
+       let newCardLimit = activeSettings.dailyNew;
+       if (activeSettings.reviewPeriod === 'weekly') {
+           const today = new Date();
+           const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
+           const daysSinceMonday = (dayOfWeek + 6) % 7;
+           const weekStart = new Date(today);
+           weekStart.setHours(0, 0, 0, 0);
+           weekStart.setDate(today.getDate() - daysSinceMonday);
+           const weekStartMs = weekStart.getTime();
+           const newThisWeek = Object.values(deckProg).filter(
+               p => p.reviews === 1 && p.lastReviewed >= weekStartMs
+           ).length;
+           newCardLimit = Math.max(0, (activeSettings.weeklyNew || 70) - newThisWeek);
+       }
+
        newCards = deckCards
           .slice(startIndex) 
           .filter(c => !deckProg[c.id] && (filters.tags && filters.tags.length > 0 ? filters.tags.includes(c.level) : true)) 
-          .slice(0, activeSettings.dailyNew); 
+          .slice(0, newCardLimit); 
     }
 
     let queue = [...scheduledReviews, ...newCards];
@@ -720,6 +737,7 @@ const App = () => {
               key={activeDeck.id}
               deck={activeDeck} 
               stats={deckStats} 
+              activeSettings={activeSettings}
               onStart={startSession} 
               onViewCards={goToCards}
               onViewSettings={goToSettings}

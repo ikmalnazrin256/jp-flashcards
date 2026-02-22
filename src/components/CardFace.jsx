@@ -58,7 +58,7 @@ export const CardFace = ({ data, side = 'front', hideRomaji = false, reverse = f
 
   // Content for Back Details (Romaji/Pronunciation)
   const PronunciationDetails = (
-      <div className="mb-8 text-center relative w-full">
+      <div className="mb-4 text-center relative w-full">
         <span className="text-indigo-200 dark:text-gray-400 text-xs uppercase tracking-widest font-bold block mb-1">Pronunciation</span>
         <div className="flex flex-col items-center justify-center relative">
             {hideRomaji ? 
@@ -98,14 +98,14 @@ export const CardFace = ({ data, side = 'front', hideRomaji = false, reverse = f
               // Standard: Back shows Pronunciation + English
               <>
                   {PronunciationDetails}
-                  <div className="w-12 h-1 bg-white/20 dark:bg-gray-700 rounded-full mb-8"></div>
+                  <div className="w-12 h-1 bg-white/20 dark:bg-gray-700 rounded-full mb-4"></div>
                   {EnglishContent}
               </>
           ) : (
               // Reverse: Back shows Pronunciation + Japanese Kanji
               <>
                   {PronunciationDetails}
-                  <div className="w-12 h-1 bg-white/20 dark:bg-gray-700 rounded-full mb-8"></div>
+                  <div className="w-12 h-1 bg-white/20 dark:bg-gray-700 rounded-full mb-4"></div>
                   <div className="text-center w-full">
                       <span className="text-indigo-200 dark:text-gray-400 text-xs uppercase tracking-widest font-bold block mb-1">Japanese</span>
                       <h2 className="font-black text-white text-5xl mb-4">{data.kanji}</h2>
@@ -115,7 +115,7 @@ export const CardFace = ({ data, side = 'front', hideRomaji = false, reverse = f
           
           <button 
             onClick={openDictionary}
-            className="mt-8 flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 text-indigo-600 dark:text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-800/30 dark:shadow-black/30 hover:bg-indigo-50 dark:hover:bg-gray-600 transition-transform active:scale-95"
+            className="mt-4 flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 text-indigo-600 dark:text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-800/30 dark:shadow-black/30 hover:bg-indigo-50 dark:hover:bg-gray-600 transition-transform active:scale-95"
             title="Open Jisho Dictionary (J)"
           >
             <Book className="w-4 h-4 mr-2" /> Jisho
