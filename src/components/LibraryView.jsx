@@ -57,7 +57,7 @@ export const LibraryView = ({ decks, progressMap, userStats, onSelectDeck, onDel
                 <div className="flex justify-between items-start mb-2 pl-3">
                   <h3 className="font-bold text-lg text-gray-800 dark:text-white truncate pr-4">{deck.name}</h3>
                   <div className="flex space-x-1">
-                    <button onClick={(e) => { e.stopPropagation(); onSplitDeck(deck); }} className="text-gray-300 hover:text-indigo-500 dark:text-gray-500 dark:hover:text-indigo-400 transition p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-700" title="Split Deck"><Scissors className="w-4 h-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onSplitDeck(deck); }} className="text-gray-300 hover:text-indigo-500 dark:text-gray-500 dark:hover:text-indigo-400 transition p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-gray-700" title="Split into smaller decks"><Scissors className="w-4 h-4" /></button>
                     <button onClick={(e) => { e.stopPropagation(); onDeleteDeck(deck.id); }} className="text-gray-300 hover:text-red-400 dark:text-gray-500 dark:hover:text-red-400 transition p-2 rounded-full hover:bg-red-50 dark:hover:bg-gray-700" title="Delete Deck"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>

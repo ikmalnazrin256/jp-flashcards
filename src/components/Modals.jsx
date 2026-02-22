@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, LogOut, Keyboard, X, Plus, Edit2, Save, PenTool, Scissors } from 'lucide-react';
+import { AlertTriangle, LogOut, Keyboard, X, Plus, Edit2, Save, PenTool, Scissors, Upload, RotateCcw, Trash2 } from 'lucide-react';
 import { COLOR_OPTIONS } from '../constants';
 
 export const DeleteConfirmationModal = ({ isOpen, deckName, onConfirm, onCancel }) => {
@@ -163,42 +163,175 @@ export const EditDeckModal = ({ isOpen, deck, onSave, onCancel }) => {
 
 export const SplitDeckModal = ({ isOpen, deck, onConfirm, onCancel }) => {
   const [batchSize, setBatchSize] = useState(50);
-  
+
   if (!isOpen || !deck) return null;
 
   const totalCards = deck.cards.length;
-  const numDecks = Math.ceil(totalCards / batchSize);
+  const clampedBatch = Math.min(Math.max(1, batchSize), totalCards);
+  const numDecks = Math.ceil(totalCards / clampedBatch);
+
+  // Build preview labels (show first 4, collapse rest)
+  const previewParts = [];
+  for (let i = 0; i < numDecks; i++) {
+    const start = i * clampedBatch + 1;
+    const end = Math.min((i + 1) * clampedBatch, totalCards);
+    previewParts.push({ label: `Part ${i + 1}`, range: `${start}–${end}` });
+  }
+  const PREVIEW_LIMIT = 4;
+  const visibleParts = previewParts.slice(0, PREVIEW_LIMIT);
+  const hiddenCount = numDecks - PREVIEW_LIMIT;
+
+  const PRESETS = [10, 20, 30, 50];
 
   return (
     <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-          <Scissors className="w-5 h-5 mr-2 text-indigo-500" /> Split Deck
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Break <strong>"{deck.name}"</strong> into smaller parts to make learning easier.
-        </p>
-        
-        <div className="mb-6">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Cards per Part</label>
-          <div className="flex items-center space-x-3">
-            <input 
-              type="number" 
+
+        {/* Header */}
+        <div className="flex items-center mb-4">
+          <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mr-3 text-indigo-500 shrink-0">
+            <Scissors className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Split Deck</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{totalCards} cards total</p>
+          </div>
+        </div>
+
+        {/* What this does */}
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/40 rounded-xl p-3 mb-5 text-xs text-indigo-700 dark:text-indigo-300 leading-relaxed">
+          <strong className="block mb-0.5">What does this do?</strong>
+          Divides <span className="font-semibold">"{deck.name}"</span> into smaller decks by card order. Your <span className="font-semibold">original deck is kept</span> — only new sub-decks are created. Great for tackling a large deck in manageable chunks.
+        </div>
+
+        {/* Cards per part */}
+        <div className="mb-4">
+          <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Cards per part</label>
+          <div className="flex items-center gap-2 mb-3">
+            {PRESETS.map(p => (
+              <button
+                key={p}
+                onClick={() => setBatchSize(p)}
+                className={`flex-1 py-2 rounded-xl text-sm font-bold border transition ${
+                  clampedBatch === p
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
               value={batchSize}
-              min="10"
+              min="1"
               max={totalCards}
-              onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 50))}
-              className="w-24 p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-center font-bold text-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+              onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-24 p-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-center font-bold text-base dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
             />
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              = <strong className="text-indigo-600 dark:text-indigo-400">{numDecks}</strong> new decks
-            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              → <strong className="text-indigo-600 dark:text-indigo-400">{numDecks} new deck{numDecks !== 1 ? 's' : ''}</strong> will be created
+            </p>
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div className="mb-6">
+          <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Preview</label>
+          <div className="flex flex-wrap gap-2">
+            {visibleParts.map((p, i) => (
+              <span key={i} className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-semibold">
+                <span className="text-indigo-500 mr-1">{p.label}</span>
+                <span className="text-gray-400 dark:text-gray-500">cards {p.range}</span>
+              </span>
+            ))}
+            {hiddenCount > 0 && (
+              <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded-lg text-xs font-semibold">
+                +{hiddenCount} more
+              </span>
+            )}
           </div>
         </div>
 
         <div className="flex w-full space-x-3">
           <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
-          <button onClick={() => onConfirm(batchSize)} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition">Split</button>
+          <button onClick={() => onConfirm(clampedBatch)} className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 transition flex items-center justify-center gap-2">
+            <Scissors className="w-4 h-4" /> Split into {numDecks}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ImportOverwriteModal = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4 text-amber-500">
+            <Upload className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Overwrite Data?</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            This will <span className="font-semibold text-amber-600 dark:text-amber-400">replace all your current decks and progress</span> with the backup file. This cannot be undone.
+          </p>
+          <div className="flex w-full space-x-3">
+            <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+            <button onClick={onConfirm} className="flex-1 py-3 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 shadow-lg shadow-amber-200 dark:shadow-amber-900/30 transition">Restore</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ResetProgressModal = ({ isOpen, deckName, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-500">
+            <RotateCcw className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Reset Progress?</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            All SRS progress for{deckName ? <> <span className="font-bold text-gray-700 dark:text-gray-200">"{deckName}"</span></> : ' this deck'} will be permanently deleted. Cards will return to their initial state.
+          </p>
+          <div className="flex w-full space-x-3">
+            <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+            <button onClick={onConfirm} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200 dark:shadow-red-900/30 transition">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const DiscardSessionModal = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4 text-orange-500">
+            <Trash2 className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Discard Session?</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            The current session queue will be cleared.
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
+            Cards you already reviewed in this session will <strong>remain reviewed</strong>.
+          </p>
+          <div className="flex w-full space-x-3">
+            <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+            <button onClick={onConfirm} className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg shadow-orange-200 dark:shadow-orange-900/30 transition">Discard</button>
+          </div>
         </div>
       </div>
     </div>

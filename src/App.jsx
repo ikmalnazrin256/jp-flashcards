@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
-import { DeleteConfirmationModal, ExitConfirmationModal, ShortcutsModal, EditCardModal, EditDeckModal, SplitDeckModal } from './components/Modals';
+import { DeleteConfirmationModal, ExitConfirmationModal, ShortcutsModal, EditCardModal, EditDeckModal, SplitDeckModal, ImportOverwriteModal, ResetProgressModal, DiscardSessionModal } from './components/Modals';
 import { Header } from './components/Header';
 import { LibraryView } from './components/LibraryView';
 import { DeckDashboardView } from './components/DeckDashboardView';
@@ -31,6 +31,10 @@ const App = () => {
   const [deckToSplit, setDeckToSplit] = useState(null);
   const [deckToEdit, setDeckToEdit] = useState(null); 
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showImportOverwriteModal, setShowImportOverwriteModal] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState(null);
+  const [showResetProgressModal, setShowResetProgressModal] = useState(false);
+  const [showDiscardSessionModal, setShowDiscardSessionModal] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [isAddingCard, setIsAddingCard] = useState(false); 
   const [history, setHistory] = useState([]);
@@ -162,17 +166,8 @@ const App = () => {
       try {
         const data = safeJsonParse(String(event.target?.result || '{}'), null);
         if (data.decks && data.progressMap) {
-          if (confirm("This will overwrite your current data. Are you sure?")) {
-            const safeDecks = normalizeDecks(data.decks);
-            const safeProgressMap = normalizeProgressMap(data.progressMap);
-            const safeDeckSettings = normalizeDeckSettings(data.deckSettings || {});
-            const safeUserStats = normalizeUserStats(data.userStats || DEFAULT_USER_STATS);
-            setDecks(safeDecks.length > 0 ? safeDecks : [DEFAULT_DECK]);
-            setProgressMap(safeProgressMap);
-            setDeckSettings(safeDeckSettings);
-            setUserStats(safeUserStats);
-            showToast("Data restored successfully");
-          }
+          setPendingImportData(data);
+          setShowImportOverwriteModal(true);
         } else {
           alert("Invalid backup file");
         }
@@ -228,14 +223,18 @@ const App = () => {
   
   const resetDeckProgress = () => {
       if (!activeDeckId) return;
-      if (confirm("Are you sure? This will delete all progress for this deck.")) {
-          const newProg = {...progressMap};
-          delete newProg[activeDeckId];
-          setProgressMap(newProg);
-          setActiveSession(null); 
-          showToast("Progress reset successfully");
-          setView('dashboard');
-      }
+      setShowResetProgressModal(true);
+  };
+
+  const confirmResetDeckProgress = () => {
+      if (!activeDeckId) return;
+      setShowResetProgressModal(false);
+      const newProg = {...progressMap};
+      delete newProg[activeDeckId];
+      setProgressMap(newProg);
+      setActiveSession(null);
+      showToast("Progress reset successfully");
+      setView('dashboard');
   };
   
   const saveDeckEdit = (updatedDeck) => {
@@ -384,9 +383,12 @@ const App = () => {
   };
 
   const discardSession = () => {
-      if(confirm("Discard current session progress? Reviewed cards will remain reviewed.")) {
-          setActiveSession(null);
-      }
+      setShowDiscardSessionModal(true);
+  };
+
+  const confirmDiscardSession = () => {
+      setShowDiscardSessionModal(false);
+      setActiveSession(null);
   };
 
   const updateUserStats = useCallback(() => {
@@ -696,6 +698,36 @@ const App = () => {
 
         {toastMessage && <Toast message={toastMessage} />}
         <DeleteConfirmationModal isOpen={!!deckToDelete} deckName={deckToDelete?.name} onConfirm={confirmDeleteDeck} onCancel={() => setDeckToDelete(null)} />
+        <ImportOverwriteModal
+            isOpen={showImportOverwriteModal}
+            onConfirm={() => {
+                if (pendingImportData) {
+                    const safeDecks = normalizeDecks(pendingImportData.decks);
+                    const safeProgressMap = normalizeProgressMap(pendingImportData.progressMap);
+                    const safeDeckSettings = normalizeDeckSettings(pendingImportData.deckSettings || {});
+                    const safeUserStats = normalizeUserStats(pendingImportData.userStats || DEFAULT_USER_STATS);
+                    setDecks(safeDecks.length > 0 ? safeDecks : [DEFAULT_DECK]);
+                    setProgressMap(safeProgressMap);
+                    setDeckSettings(safeDeckSettings);
+                    setUserStats(safeUserStats);
+                    showToast('Data restored successfully');
+                }
+                setPendingImportData(null);
+                setShowImportOverwriteModal(false);
+            }}
+            onCancel={() => { setPendingImportData(null); setShowImportOverwriteModal(false); }}
+        />
+        <ResetProgressModal
+            isOpen={showResetProgressModal}
+            deckName={activeDeck?.name}
+            onConfirm={confirmResetDeckProgress}
+            onCancel={() => setShowResetProgressModal(false)}
+        />
+        <DiscardSessionModal
+            isOpen={showDiscardSessionModal}
+            onConfirm={confirmDiscardSession}
+            onCancel={() => setShowDiscardSessionModal(false)}
+        />
         <SplitDeckModal isOpen={!!deckToSplit} deck={deckToSplit} onConfirm={performSplitDeck} onCancel={() => setDeckToSplit(null)} />
         <ExitConfirmationModal 
             isOpen={showExitModal} 

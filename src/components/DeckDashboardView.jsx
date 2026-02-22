@@ -145,38 +145,50 @@ export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onView
 
       {/* Study Options */}
       <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center">
-          <Filter className="w-4 h-4 mr-2"/> Study Options
-        </h3>
+        <div>
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center">
+            <Filter className="w-4 h-4 mr-2"/> Study Options
+          </h3>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-6">Customise how your next session is built before you start.</p>
+        </div>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="text-sm text-gray-700 dark:text-gray-400">Start from card #</label>
+          <div className="flex items-start justify-between">
+            <div>
+              <label className="text-sm text-gray-700 dark:text-gray-400">Start from card #</label>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Skip ahead — useful for continuing where you left off.</p>
+            </div>
             <input 
               type="number" 
               min="1"
               placeholder="1" 
               value={startFrom} 
               onChange={(e) => setStartFrom(e.target.value)} 
-              className="w-20 p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-center font-bold text-gray-700 dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none" 
+              className="w-20 p-2 border border-gray-200 dark:border-gray-600 rounded-lg text-center font-bold text-gray-700 dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none shrink-0 ml-4" 
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-               <span className="text-sm text-gray-700 dark:text-gray-400 flex items-center"><RotateCcw className="w-3 h-3 mr-2" /> Reverse Cards (EN first)</span>
-               <button onClick={() => setReverseMode(!reverseMode)} className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${reverseMode ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-600'}`}><div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all duration-200 ${reverseMode ? 'left-7' : 'left-1'}`}></div></button>
+          <div className="flex items-start justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div>
+              <span className="text-sm text-gray-700 dark:text-gray-400 flex items-center"><RotateCcw className="w-3 h-3 mr-2" /> Reverse Cards (EN first)</span>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Shows the English meaning first — test yourself from EN → JP.</p>
+            </div>
+            <button onClick={() => setReverseMode(!reverseMode)} className={`w-12 h-6 rounded-full relative transition-colors duration-200 shrink-0 ml-4 mt-0.5 ${reverseMode ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-600'}`}><div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all duration-200 ${reverseMode ? 'left-7' : 'left-1'}`}></div></button>
           </div>
 
           {/* CATEGORY FILTERS */}
           <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-             <div className="flex items-center justify-between mb-2">
-               <span className="text-sm text-gray-700 dark:text-gray-400">Filter by Category:</span>
-               <button onClick={toggleAllTags} className="text-xs font-bold text-indigo-500 hover:text-indigo-600">
+             <div className="flex items-start justify-between mb-1">
+               <div>
+                 <span className="text-sm text-gray-700 dark:text-gray-400">Filter by Category</span>
+                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Only study cards from the selected categories. Tap to toggle.</p>
+               </div>
+               <button onClick={toggleAllTags} className="text-xs font-bold text-indigo-500 hover:text-indigo-600 shrink-0 ml-4 mt-0.5">
                    {selectedTagsValue.length === availableTags.length ? 'Clear All' : 'Select All'}
                </button>
              </div>
              {availableTags.length > 0 ? (
-                 <div className="flex flex-wrap gap-2">
+                 <div className="flex flex-wrap gap-2 mt-2">
                     {availableTags.map(tag => (
                         <button
                             key={tag}
@@ -188,21 +200,24 @@ export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onView
                     ))}
                  </div>
              ) : (
-                 <p className="text-xs text-gray-400 italic">No categories found in deck.</p>
+                 <p className="text-xs text-gray-400 italic mt-2">No categories found in deck.</p>
              )}
           </div>
           
           <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700 dark:text-gray-400">Show card types:</span>
+            <div className="flex items-start justify-between mb-1">
+              <div>
+                <span className="text-sm text-gray-700 dark:text-gray-400">Show card types</span>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Include only cards with these ratings. <span className="font-semibold text-purple-500 dark:text-purple-400">Cram</span> ignores due dates and shows all.</p>
+              </div>
               <button 
                 onClick={() => toggleFilter('ignoreDueDate')} 
-                className={`text-xs px-3 py-1 rounded-full font-bold transition flex items-center ${filters.ignoreDueDate ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'}`}
+                className={`text-xs px-3 py-1 rounded-full font-bold transition flex items-center shrink-0 ml-4 mt-0.5 ${filters.ignoreDueDate ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'}`}
               >
                 <Zap className="w-3 h-3 mr-1" /> Cram Mode
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {['new','again','hard','good','easy'].map(f => (
                 <button 
                   key={f} 
