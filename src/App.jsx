@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toast } from './components/Toast';
-import { DeleteConfirmationModal, ExitConfirmationModal, ShortcutsModal, EditCardModal, EditDeckModal, SplitDeckModal, ImportOverwriteModal, ResetProgressModal, DiscardSessionModal } from './components/Modals';
+import { DeleteConfirmationModal, ExitConfirmationModal, ShortcutsModal, EditCardModal, EditDeckModal, SplitDeckModal, ImportOverwriteModal, ResetProgressModal, DiscardSessionModal, AutoTagModal } from './components/Modals';
 import { Header } from './components/Header';
 import { LibraryView } from './components/LibraryView';
 import { DeckDashboardView } from './components/DeckDashboardView';
@@ -35,6 +35,7 @@ const App = () => {
   const [pendingImportData, setPendingImportData] = useState(null);
   const [showResetProgressModal, setShowResetProgressModal] = useState(false);
   const [showDiscardSessionModal, setShowDiscardSessionModal] = useState(false);
+  const [showAutoTagModal, setShowAutoTagModal] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [isAddingCard, setIsAddingCard] = useState(false); 
   const [history, setHistory] = useState([]);
@@ -407,6 +408,20 @@ const App = () => {
       setActiveSession(null);
   };
 
+  const handleAutoTag = (prefix, groupSize) => {
+      if (!activeDeckId) return;
+      setDecks(prev => prev.map(d => {
+          if (d.id !== activeDeckId) return d;
+          const updatedCards = d.cards.map((card, i) => ({
+              ...card,
+              level: `${prefix}${Math.floor(i / groupSize) + 1}`
+          }));
+          return { ...d, cards: updatedCards };
+      }));
+      setShowAutoTagModal(false);
+      showToast('Tags applied successfully');
+  };
+
   const updateUserStats = useCallback(() => {
       const today = new Date().toISOString().slice(0, 10);
       
@@ -744,6 +759,12 @@ const App = () => {
             onConfirm={confirmDiscardSession}
             onCancel={() => setShowDiscardSessionModal(false)}
         />
+        <AutoTagModal
+            isOpen={showAutoTagModal}
+            totalCards={activeDeck?.cards.length || 0}
+            onConfirm={handleAutoTag}
+            onCancel={() => setShowAutoTagModal(false)}
+        />
         <SplitDeckModal isOpen={!!deckToSplit} deck={deckToSplit} onConfirm={performSplitDeck} onCancel={() => setDeckToSplit(null)} />
         <ExitConfirmationModal 
             isOpen={showExitModal} 
@@ -790,6 +811,7 @@ const App = () => {
               onViewCards={goToCards}
               onViewSettings={goToSettings}
               onExport={() => exportToCSV(activeDeck)}
+              onAutoTag={() => setShowAutoTagModal(true)}
               onEditDeck={() => setDeckToEdit(activeDeck)}
               onAddCard={() => setIsAddingCard(true)}
               activeSession={activeSession && activeSession.deckId === activeDeckId ? activeSession : null}

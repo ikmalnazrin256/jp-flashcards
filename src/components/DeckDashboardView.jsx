@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, PenTool, Flame, Book, Play, Layers, List, Settings, Filter, RotateCcw, Zap, Download } from 'lucide-react';
+import { Plus, PenTool, Flame, Book, Play, Layers, List, Settings, Filter, RotateCcw, Zap, Download, Tag } from 'lucide-react';
 
-export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onViewCards, onViewSettings, onExport, onEditDeck, onAddCard, activeSession, onResumeSession, onDiscardSession }) => {
+export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onViewCards, onViewSettings, onExport, onAutoTag, onEditDeck, onAddCard, activeSession, onResumeSession, onDiscardSession }) => {
   const [filters, setFilters] = useState({ new: true, again: true, hard: true, good: true, easy: true, ignoreDueDate: false });
   const [startFrom, setStartFrom] = useState('');
   const [reverseMode, setReverseMode] = useState(false); // NEW: Reverse Mode Toggle
@@ -232,13 +232,21 @@ export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onView
         </div>
       </div>
 
-      {/* Export */}
-      <button 
-        onClick={onExport}
-        className="w-full py-3 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl font-bold flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-700"
-      >
-        <Download className="w-4 h-4 mr-2" /> Export Deck as CSV
-      </button>
+      {/* Export + Auto-tag */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={onAutoTag}
+          className="py-3 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-xl font-bold flex items-center justify-center hover:bg-teal-100 dark:hover:bg-teal-900/40 text-sm border border-teal-200 dark:border-teal-800"
+        >
+          <Tag className="w-4 h-4 mr-2" /> Auto-tag
+        </button>
+        <button
+          onClick={onExport}
+          className="py-3 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl font-bold flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-700"
+        >
+          <Download className="w-4 h-4 mr-2" /> Export CSV
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, LogOut, Keyboard, X, Plus, Edit2, Save, PenTool, Scissors, Upload, RotateCcw, Trash2 } from 'lucide-react';
+import { AlertTriangle, LogOut, Keyboard, X, Plus, Edit2, Save, PenTool, Scissors, Upload, RotateCcw, Trash2, Tag } from 'lucide-react';
 import { COLOR_OPTIONS } from '../constants';
 
 export const DeleteConfirmationModal = ({ isOpen, deckName, onConfirm, onCancel }) => {
@@ -332,6 +332,127 @@ export const DiscardSessionModal = ({ isOpen, onConfirm, onCancel }) => {
             <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
             <button onClick={onConfirm} className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg shadow-orange-200 dark:shadow-orange-900/30 transition">Discard</button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const AutoTagModal = ({ isOpen, totalCards, onConfirm, onCancel }) => {
+  const [prefix, setPrefix] = useState('W');
+  const [groupSize, setGroupSize] = useState(50);
+
+  if (!isOpen) return null;
+
+  const safeSize = Math.max(1, groupSize || 1);
+  const numGroups = Math.ceil(totalCards / safeSize);
+
+  const PRESETS = [10, 20, 30, 50];
+  const PREVIEW_LIMIT = 5;
+  const previewGroups = [];
+  for (let i = 0; i < numGroups; i++) {
+    const start = i * safeSize + 1;
+    const end = Math.min((i + 1) * safeSize, totalCards);
+    previewGroups.push({ tag: `${prefix || 'W'}${i + 1}`, range: `${start}–${end}` });
+  }
+  const visible = previewGroups.slice(0, PREVIEW_LIMIT);
+  const hiddenCount = numGroups - PREVIEW_LIMIT;
+
+  return (
+    <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
+
+        {/* Header */}
+        <div className="flex items-center mb-4">
+          <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mr-3 text-teal-500 shrink-0">
+            <Tag className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Auto-tag by Range</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{totalCards} cards total</p>
+          </div>
+        </div>
+
+        {/* Explanation */}
+        <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/40 rounded-xl p-3 mb-5 text-xs text-teal-700 dark:text-teal-300 leading-relaxed">
+          <strong className="block mb-0.5">What does this do?</strong>
+          Groups cards by their order in the deck and assigns a category tag to each group. Useful when your CSV didn't have a week/category column.
+          <span className="block mt-1 text-teal-600 dark:text-teal-400 font-semibold">⚠ This will overwrite existing category tags on all cards.</span>
+        </div>
+
+        {/* Prefix */}
+        <div className="mb-4">
+          <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Tag prefix</label>
+          <input
+            type="text"
+            maxLength={10}
+            value={prefix}
+            onChange={e => setPrefix(e.target.value)}
+            placeholder="W"
+            className="w-full p-2.5 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-base dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+          />
+          <p className="text-xs text-gray-400 mt-1">e.g. "W" → W1, W2… or "Week " → Week 1, Week 2…</p>
+        </div>
+
+        {/* Group size */}
+        <div className="mb-4">
+          <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Cards per group</label>
+          <div className="flex items-center gap-2 mb-3">
+            {PRESETS.map(p => (
+              <button
+                key={p}
+                onClick={() => setGroupSize(p)}
+                className={`flex-1 py-2 rounded-xl text-sm font-bold border transition ${
+                  safeSize === p
+                    ? 'bg-teal-500 text-white border-teal-500 shadow-sm'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-teal-400'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              value={groupSize}
+              min="1"
+              max={totalCards}
+              onChange={(e) => setGroupSize(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-24 p-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-center font-bold text-base dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+            />
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              → <strong className="text-teal-600 dark:text-teal-400">{numGroups} group{numGroups !== 1 ? 's' : ''}</strong> created
+            </p>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div className="mb-6">
+          <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Preview</label>
+          <div className="flex flex-wrap gap-2">
+            {visible.map((g, i) => (
+              <span key={i} className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-semibold">
+                <span className="text-teal-500 mr-1">{g.tag}</span>
+                <span className="text-gray-400 dark:text-gray-500">cards {g.range}</span>
+              </span>
+            ))}
+            {hiddenCount > 0 && (
+              <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded-lg text-xs font-semibold">
+                +{hiddenCount} more
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex w-full space-x-3">
+          <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+          <button
+            onClick={() => onConfirm(prefix || 'W', safeSize)}
+            className="flex-1 py-3 bg-teal-500 text-white font-bold rounded-xl hover:bg-teal-600 shadow-lg shadow-teal-200 dark:shadow-teal-900/30 transition flex items-center justify-center gap-2"
+          >
+            <Tag className="w-4 h-4" /> Apply Tags
+          </button>
         </div>
       </div>
     </div>
