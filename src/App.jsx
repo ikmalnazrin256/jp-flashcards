@@ -62,7 +62,7 @@ const App = () => {
      activeDeck.cards.forEach(c => {
          if(c.level) tags.add(c.level);
      });
-     return Array.from(tags).sort();
+     return Array.from(tags).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   }, [activeDeck]);
 
   const fileInputRef = useRef(null);
@@ -248,11 +248,27 @@ const App = () => {
      const newCard = {
          ...newCardData,
          id: `manual-${Date.now()}`,
-         originalNumber: (activeDeck.cards.length + 1).toString()
+         originalNumber: '0' // placeholder, recalculated below
      };
      setDecks(prev => prev.map(d => {
          if (d.id !== activeDeckId) return d;
-         return { ...d, cards: [...d.cards, newCard] };
+
+         const cards = d.cards;
+         let insertIndex = cards.length; // default: append at end
+
+         // If the new card has a tag, insert after the last card with the same tag
+         if (newCard.level && newCard.level !== 'Uncategorized') {
+             const lastSameTagIndex = cards.reduce((last, c, i) => c.level === newCard.level ? i : last, -1);
+             if (lastSameTagIndex !== -1) insertIndex = lastSameTagIndex + 1;
+         }
+
+         const updatedCards = [
+             ...cards.slice(0, insertIndex),
+             newCard,
+             ...cards.slice(insertIndex)
+         ].map((c, i) => ({ ...c, originalNumber: (i + 1).toString() }));
+
+         return { ...d, cards: updatedCards };
      }));
      setIsAddingCard(false);
      showToast("Card added successfully");

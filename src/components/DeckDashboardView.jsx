@@ -16,7 +16,7 @@ export const DeckDashboardView = ({ deck, stats, activeSettings, onStart, onView
      deck.cards.forEach(c => {
          if(c.level) tags.add(c.level);
      });
-     return Array.from(tags).sort();
+     return Array.from(tags).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   }, [deck]);
 
   const selectedTagsValue = selectedTags ?? availableTags;
