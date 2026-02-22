@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { STORAGE_KEYS, DEFAULT_USER_STATS, DEFAULT_DECK } from '../constants';
-import { normalizeDecks, normalizeProgressMap, normalizeDeckSettings, normalizeActiveSession, normalizeUserStats, safeStorageGetJson, safeStorageSetJson, safeStorageSetText } from '../utils';
+import { normalizeDecks, normalizeProgressMap, normalizeDeckSettings, normalizeActiveSession, normalizeUserStats, safeStorageGetJson, safeStorageSetJson, safeStorageGetText, safeStorageSetText } from '../utils';
 
 export const useAppState = () => {
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ export const useAppState = () => {
       const savedProgress = normalizeProgressMap(safeStorageGetJson(STORAGE_KEYS.progress, {}));
       const savedSettings = normalizeDeckSettings(safeStorageGetJson(STORAGE_KEYS.settings, {}));
       const savedSession = normalizeActiveSession(safeStorageGetJson(STORAGE_KEYS.activeSession, null));
-      const darkModeSetting = localStorage.getItem(STORAGE_KEYS.darkMode);
+      const darkModeSetting = safeStorageGetText(STORAGE_KEYS.darkMode, null);
       const prefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
       const savedDarkMode = darkModeSetting === null ? Boolean(prefersDark) : darkModeSetting === 'true';
       const savedStats = normalizeUserStats(safeStorageGetJson(STORAGE_KEYS.userStats, DEFAULT_USER_STATS));

@@ -6,23 +6,21 @@ export const useNavigation = (view, setView, activeDeckId, setActiveDeckId, load
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const initialState = window.history.state?.__jpFlashcards
-      ? window.history.state
-      : { __jpFlashcards: true, view: 'library', activeDeckId: null };
-
-    window.history.replaceState(initialState, '', window.location.href);
-
-    if (initialState.view) {
-      isPopNavigationRef.current = true;
-      setView(initialState.view);
-      setActiveDeckId(initialState.activeDeckId || null);
-    }
+    // Always start from library on a fresh page load/reload.
+    // We use replaceState so it doesn't add an extra history entry.
+    const freshState = { __jpFlashcards: true, view: 'library', activeDeckId: null };
+    window.history.replaceState(freshState, '', window.location.href);
 
     const handlePopState = (event) => {
       if (event.state?.__jpFlashcards) {
         isPopNavigationRef.current = true;
         setView(event.state.view || 'library');
         setActiveDeckId(event.state.activeDeckId || null);
+      } else {
+        // Fallback if state is missing
+        isPopNavigationRef.current = true;
+        setView('library');
+        setActiveDeckId(null);
       }
     };
 
@@ -47,6 +45,9 @@ export const useNavigation = (view, setView, activeDeckId, setActiveDeckId, load
       return;
     }
 
+    // If we are going back to library, we might want to replace state instead of push
+    // to avoid infinite loops of library states, but pushState is generally fine
+    // if we want to keep the history.
     window.history.pushState(
       { __jpFlashcards: true, view, activeDeckId: activeDeckId || null },
       '',

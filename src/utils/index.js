@@ -97,6 +97,16 @@ export const safeStorageGetJson = (key, fallback) => {
   }
 };
 
+export const safeStorageGetText = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return raw;
+  } catch {
+    return fallback;
+  }
+};
+
 export const safeStorageSetJson = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));

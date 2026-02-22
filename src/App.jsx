@@ -668,6 +668,7 @@ const App = () => {
             onBack={() => {
               if (view === 'dashboard') goToLibrary();
               else if (view === 'list' || view === 'settings') setView('dashboard');
+              else if (view === 'summary') setView('dashboard');
             }}
             onGoToLibrary={goToLibrary}
             onImport={() => fileInputRef.current?.click()}
