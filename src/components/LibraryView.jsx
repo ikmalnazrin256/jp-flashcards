@@ -42,31 +42,66 @@ export const LibraryView = ({ decks, progressMap, userStats, onSelectDeck, onDel
       )}
       
       {/* DAILY GOAL WIDGET */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg mb-6 flex items-center justify-between">
-          <div>
-              <p className="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-1">Daily Goal</p>
-              <div className="flex items-baseline">
+      {(() => {
+        const isComplete = goalProgress >= 100;
+        const isStarted = userStats.dailyReviews > 0;
+        const statusMessage = isComplete
+          ? "Goal complete! Great work today 🎉"
+          : isStarted
+          ? `${DAILY_GOAL_TARGET - userStats.dailyReviews} more cards to hit your goal!`
+          : "Review cards daily to build long-term memory.";
+        const remaining = Math.max(0, DAILY_GOAL_TARGET - userStats.dailyReviews);
+        const daysToFinish = hasDecks
+          ? Math.ceil(
+              decks.reduce((sum, d) => {
+                const prog = progressMap[d.id] || {};
+                const unseenCount = d.cards.filter(c => !prog[c.id]).length;
+                return sum + unseenCount;
+              }, 0) / DAILY_GOAL_TARGET
+            )
+          : null;
+        return (
+          <div className={`rounded-2xl p-4 text-white shadow-lg mb-2 ${isComplete ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-gradient-to-r from-indigo-500 to-purple-600'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-bold text-white/70 uppercase tracking-wider mb-0.5">Daily Goal</p>
+                <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-black">{userStats.dailyReviews}</span>
-                  <span className="text-sm text-indigo-200 ml-1">/ {DAILY_GOAL_TARGET} cards</span>
+                  <span className="text-sm text-white/70">/ {DAILY_GOAL_TARGET} cards</span>
+                </div>
               </div>
-          </div>
-          <div className="flex items-center space-x-4">
-              <div className="text-center">
-                  <p className="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-1">Streak</p>
+              <div className="flex items-center gap-3">
+                <div className="text-center">
+                  <p className="text-xs font-bold text-white/70 uppercase tracking-wider mb-1">Streak</p>
                   <div className="flex items-center bg-white/20 rounded-lg px-2 py-1">
-                      <Flame className="w-4 h-4 mr-1 text-orange-300" fill="currentColor" />
-                      <span className="font-bold">{userStats.streak}</span>
+                    <Flame className="w-4 h-4 mr-1 text-orange-300" fill="currentColor" />
+                    <span className="font-bold">{userStats.streak}</span>
+                    <span className="text-xs text-white/60 ml-1">day{userStats.streak !== 1 ? 's' : ''}</span>
                   </div>
+                </div>
+                <div className={`text-sm font-black px-3 py-2 rounded-xl ${isComplete ? 'bg-white/20 text-white' : 'bg-white/20 text-white'}`}>
+                  {goalProgress}%
+                </div>
               </div>
-              <div className="relative w-12 h-12">
-                  <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-indigo-800/30" />
-                      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white transition-all duration-1000 ease-out" strokeDasharray="125.6" strokeDashoffset={125.6 - (125.6 * goalProgress) / 100} />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">{goalProgress}%</div>
-              </div>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full bg-white/20 rounded-full h-2 mb-2 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${isComplete ? 'bg-white' : 'bg-white/80'}`}
+                style={{ width: `${goalProgress}%` }}
+              />
+            </div>
+            {/* Status message */}
+            <p className="text-xs text-white/80 font-medium">{statusMessage}</p>
+            {/* Contextual reason */}
+            {!isComplete && daysToFinish !== null && daysToFinish > 0 && (
+              <p className="text-xs text-white/50 mt-0.5">
+                At this pace, you'll cover all unseen cards in ~{daysToFinish} day{daysToFinish !== 1 ? 's' : ''}.
+              </p>
+            )}
           </div>
-      </div>
+        );
+      })()}
       
       {hasDecks ? (
         <div className="grid gap-4">
